@@ -1,15 +1,15 @@
-""" CodePilot CLI """
+""" Quran CLI """
 
 import typer
-from cli.commands import command_list
+from quran_cli.commands import command_list
 
 
 # CLI
 app = typer.Typer(
-    name="code-pilot",
+    name="quran-cli",
     no_args_is_help=True,
     rich_markup_mode="rich",
-    help="Typer CLI Template",
+    help="Quran CLI",
 )
 
 for command in command_list:

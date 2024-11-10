@@ -1,15 +1,15 @@
 [tool.poetry]
-name = "typer-cli-template"
+name = "quran-cli"
 version = "0.1.0"
-description = "Typer CLI Template"
+description = "Quran CLI"
 authors = ["Yousuf Abu Shanab <josephyousef249@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-include = ["app.py"]
-homepage = "https://github.com/youzarsiph/typer-cli-template"
-repository = "https://github.com/youzarsiph/typer-cli-template"
-documentation = "https://github.com/youzarsiph/typer-cli-template"
-packages = [{ include = "cli" }]
+include = []
+homepage = "https://github.com/youzarsiph/quran-cli"
+repository = "https://github.com/youzarsiph/quran-cli"
+documentation = "https://github.com/youzarsiph/quran-cli"
+packages = [{ include = "quran_cli" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -20,7 +20,7 @@ black = "^24.8.0"
 ruff = "^0.6.5"
 
 [tool.poetry.scripts]
-typer-cli = "cli.main:app"
+quran-cli = "quran_cli.main:app"
 
 [build-system]
 requires = ["poetry-core"]
