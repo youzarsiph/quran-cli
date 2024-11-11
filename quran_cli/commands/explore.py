@@ -10,20 +10,26 @@ from rich.table import Table
 
 
 def explore(
-    db: Annotated[
+    database: Annotated[
         Path,
         typer.Argument(exists=True, dir_okay=False, help="Database name"),
     ]
 ) -> None:
     """
-    Explore the Quran db
+    Explore the Quran database
 
     Args:
-        db (Path, optional): Database file.
+        database (Path): Database file.
     """
 
+    db_name = (
+        database.name
+        if database.name.endswith((".sqlite3", ".db"))
+        else database.name + ".sqlite3"
+    )
+
     try:
-        connection = sqlite3.connect(db)
+        connection = sqlite3.connect(db_name)
         cursor = connection.cursor()
 
         while True:
@@ -51,4 +57,4 @@ def explore(
             console.print(table)
 
     except Exception as error:
-        print(error)
+        print(f"[bold red]Error[/bold red]: {error}")
