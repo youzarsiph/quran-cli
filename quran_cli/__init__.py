@@ -145,7 +145,7 @@ def extract_range_data(
 
 def get_range_data(
     db_name: str,
-    key: Literal["ajzaa", "safahat", "quarters"],
+    key: Literal["parts", "pages", "quarters"],
 ) -> List[Tuple[int, int]]:
     """
     Extracts the verse range from the database as (start_verse_id, end_verse_id).
@@ -191,7 +191,7 @@ def insert_verses(db_name: str) -> None:
 
     for verse in verses:
         cursor.execute(
-            'INSERT INTO "ayah" ("number", "content", "sura_id") VALUES (?, ?, ?);',
+            'INSERT INTO "verses" ("number", "content", "chapter_id") VALUES (?, ?, ?);',
             verse,
         )
 
@@ -214,24 +214,24 @@ def insert_metadata(db_name: str) -> None:
     cursor = connection.cursor()
 
     for i in range(1, 31):
-        cursor.execute("INSERT INTO juz (name) VALUES (?)", (f"Juz {i}",))
+        cursor.execute("INSERT INTO parts (name) VALUES (?)", (f"Part {i}",))
 
     for i in range(1, 61):
-        cursor.execute("INSERT INTO hizb (name) VALUES (?)", (f"Hizb {i}",))
+        cursor.execute("INSERT INTO groups (name) VALUES (?)", (f"Group {i}",))
 
     for i in range(1, 241):
-        cursor.execute("INSERT INTO quarter (name) VALUES (?)", (f"quarter {i}",))
+        cursor.execute("INSERT INTO quarters (name) VALUES (?)", (f"Quarter {i}",))
 
     for i in range(1, 605):
-        cursor.execute("INSERT INTO safhah (name) VALUES (?)", (f"Safhah {i}",))
+        cursor.execute("INSERT INTO pages (name) VALUES (?)", (f"Page {i}",))
 
     connection.commit()
     connection.close()
 
 
-def update_ayah_table(db_name: str) -> None:
+def update_verses_table(db_name: str) -> None:
     """
-    Add juz_id, hizb_id, quarter_id and safhah_id to ayah table.
+    Add part_id, group_id, quarter_id and page_id to verses table.
 
     Args:
         db_name (str): Database filename
@@ -241,8 +241,8 @@ def update_ayah_table(db_name: str) -> None:
     cursor = connection.cursor()
 
     key_cols = [
-        ("ajzaa", "juz_id"),
-        ("safahat", "safhah_id"),
+        ("parts", "part_id"),
+        ("pages", "page_id"),
         ("quarters", "quarter_id"),
     ]
     for key, col in key_cols:
@@ -250,13 +250,13 @@ def update_ayah_table(db_name: str) -> None:
 
         for i, item in enumerate(data, start=1):
             cursor.execute(
-                f'UPDATE "ayah" SET {col} = ? where "id" between ? AND ?',
+                f'UPDATE "verses" SET {col} = ? where "id" between ? AND ?',
                 (i, *item),
             )
 
         connection.commit()
 
-    # Insert hizb data
+    # Insert group data
     data = get_range_data(db_name, "quarters")
     ahzab = [
         (data[i][0], data[i + 3][1] if i + 4 < len(data) - 1 else 6236)
@@ -265,7 +265,7 @@ def update_ayah_table(db_name: str) -> None:
 
     for i, item in enumerate(ahzab, start=1):
         cursor.execute(
-            'UPDATE "ayah" SET hizb_id = ? where "id" between ? AND ?',
+            'UPDATE "verses" SET group_id = ? where "id" between ? AND ?',
             (i, *item),
         )
 
@@ -284,10 +284,10 @@ def update_verse_count(db_name: str) -> None:
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
-    tables = ["hizb", "juz", "quarter", "safhah"]
+    tables = ["groups", "parts", "quarters", "pages"]
     for table in tables:
         data = cursor.execute(
-            f'SELECT COUNT(*) FROM "ayah" GROUP BY "{table}_id"'
+            f'SELECT COUNT(*) FROM "verses" GROUP BY "{table[0:-1]}_id"'
         ).fetchall()
 
         for i, item in enumerate(data, start=1):
@@ -299,9 +299,9 @@ def update_verse_count(db_name: str) -> None:
     connection.close()
 
 
-def update_safhah_table(db_name: str) -> None:
+def update_pages_table(db_name: str) -> None:
     """
-    Add sura_id, juz_id, hizb_id and quarter_id to safhah table.
+    Add chapter_id, part_id, group_id and quarter_id to pages table.
 
     Args:
         db_name (str): Database filename
@@ -311,12 +311,12 @@ def update_safhah_table(db_name: str) -> None:
     cursor = connection.cursor()
 
     data = cursor.execute(
-        'SELECT "sura_id", "juz_id", "hizb_id", "quarter_id" FROM "ayah" GROUP BY "safhah_id"'
+        'SELECT "chapter_id", "part_id", "group_id", "quarter_id" FROM "verses" GROUP BY "page_id"'
     ).fetchall()
 
     for item in enumerate(data, start=1):
         cursor.execute(
-            'UPDATE "safhah" SET "sura_id" = ?, "juz_id" = ?, "hizb_id" = ?, "quarter_id" = ? WHERE "id" = ?',
+            'UPDATE "pages" SET "chapter_id" = ?, "part_id" = ?, "group_id" = ?, "quarter_id" = ? WHERE "id" = ?',
             (*item[1], item[0]),
         )
 

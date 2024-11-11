@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 from rich import print
 
-from quran_cli import update_safhah_table
+from quran_cli import update_pages_table
 
 
 def test(
@@ -22,7 +22,7 @@ def test(
     """
 
     try:
-        update_safhah_table(database.name)
+        update_pages_table(database.name)
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

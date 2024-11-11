@@ -10,8 +10,8 @@ from quran_cli import (
     insert_chapters,
     insert_metadata,
     insert_verses,
-    update_ayah_table,
-    update_safhah_table,
+    update_verses_table,
+    update_pages_table,
     update_verse_count,
 )
 
@@ -40,9 +40,9 @@ def normalize(
         insert_chapters(db_name)
         insert_verses(db_name)
         insert_metadata(db_name)
-        update_ayah_table(db_name)
+        update_verses_table(db_name)
         update_verse_count(db_name)
-        update_safhah_table(db_name)
+        update_pages_table(db_name)
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")
