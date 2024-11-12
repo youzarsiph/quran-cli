@@ -24,4 +24,6 @@ jobs:
           poetry install
 
       - name: Run the app
-        run: quran-cli --help
+        run: |
+          source .venv/bin/activate
+          quran-cli --help

@@ -12,10 +12,17 @@ def init(
     database: Annotated[Path, typer.Argument(dir_okay=False, help="Database name")]
 ) -> None:
     """
-    Initialize Quran database with structure of Tanzil Project
+    Initialize Quran database.
 
     Args:
         name (str): Database name.
+
+    Examples:
+
+    ```bash
+    # Create initial database
+    quran-cli init db.sqlite3
+    ```
     """
 
     db_name = (
@@ -27,6 +34,8 @@ def init(
     try:
         create_db(db_name)
         insert_initial_data(db_name)
+
+        print("[bold green]Database created successfully[/bold green]")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

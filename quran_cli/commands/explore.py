@@ -16,10 +16,19 @@ def explore(
     ]
 ) -> None:
     """
-    Explore the Quran database
+    Explore the Quran database with SQL.
 
     Args:
         database (Path): Database file.
+
+    Examples:
+
+    ```bash
+    # Create initial database
+    quran-cli init db.sqlite3
+
+    quran-cli explore db.sqlite3
+    ```
     """
 
     db_name = (
@@ -31,6 +40,11 @@ def explore(
     try:
         connection = sqlite3.connect(db_name)
         cursor = connection.cursor()
+
+        print(
+            "[bold]SQLite 3 shell[/bold]\n"
+            "Type [bold red]exit[/bold red] or [bold red]quit[/bold red] to exit."
+        )
 
         while True:
             query = typer.prompt("SQLite3", prompt_suffix=" >>> ")

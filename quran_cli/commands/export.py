@@ -28,7 +28,7 @@ def export(
         typer.Option(
             "-o", "--output", file_okay=False, dir_okay=True, help="Output folder"
         ),
-    ] = Path("quran-data"),
+    ] = Path("quran"),
     format: Annotated[
         Optional[ExportFormat],
         typer.Option("-f", "--format", help="Export format."),
@@ -41,6 +41,19 @@ def export(
         database (Path): Database filename.
         output (Path, optional): Output folder.
         format (str, optional): Export format.
+
+    Examples:
+
+    ```bash
+    # Create initial database
+    quran-cli init db.sqlite3
+
+    # Normalize initial database
+    quran-cli normalize db.sqlite3
+
+    # Export normalized database
+    quran-cli export db.sqlite3 -f json
+    ```
     """
 
     try:
@@ -50,34 +63,43 @@ def export(
         tables = ["chapters", "parts", "groups", "quarters", "pages", "verses"]
 
         for table in tables:
-            df = pd.read_sql(sql=f"SELECT * FROM {table}", con=connection)
+            data = pd.read_sql(sql=f"SELECT * FROM {table}", con=connection)
+
+            filename = os.path.join(output.name, table)
 
             match format:
                 case "csv":
                     with open(
-                        f"{output}/{table}.csv",
-                        "w",
+                        f"{filename}.csv",
+                        mode="w",
                         encoding="utf-8",
                     ) as file:
-                        df.to_csv(file, index=False)
+                        data.to_csv(file, index=False)
 
                 case "json":
                     with open(
-                        f"{output}/{table}.json",
-                        "w",
+                        f"{filename}.json",
+                        mode="w",
                         encoding="utf-8",
                     ) as file:
-                        df.to_json(file, orient="records", indent=2, force_ascii=False)
+                        data.to_json(
+                            file,
+                            orient="records",
+                            indent=2,
+                            force_ascii=False,
+                        )
 
                 case "xml":
                     with open(
-                        f"{output}/{table}.xml",
-                        "w",
+                        f"{filename}.xml",
+                        mode="w",
                         encoding="utf-8",
                     ) as file:
-                        df.to_xml(file)
+                        data.to_xml(file)
 
         connection.close()
+
+        print("[bold green]Export completed successfully[/bold green]")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")
