@@ -229,7 +229,7 @@ def insert_metadata(db_name: str) -> None:
     connection.close()
 
 
-def update_verses_table(db_name: str) -> None:
+def add_verse_related_fields(db_name: str) -> None:
     """
     Add part_id, group_id, quarter_id and page_id to verses table.
 
@@ -273,9 +273,9 @@ def update_verses_table(db_name: str) -> None:
     connection.close()
 
 
-def update_verse_count(db_name: str) -> None:
+def add_verse_count(db_name: str) -> None:
     """
-    Update verse_count on tables.
+    Add verse_count to tables.
 
     Args:
         db_name (str): Database filename
@@ -299,9 +299,9 @@ def update_verse_count(db_name: str) -> None:
     connection.close()
 
 
-def update_pages_table(db_name: str) -> None:
+def add_related_fields(db_name: str) -> None:
     """
-    Add chapter_id, part_id, group_id and quarter_id to pages table.
+    Add chapter_id, part_id, group_id and quarter_id to pages, groups and quartes tables.
 
     Args:
         db_name (str): Database filename
@@ -317,6 +317,26 @@ def update_pages_table(db_name: str) -> None:
     for item in enumerate(data, start=1):
         cursor.execute(
             'UPDATE "pages" SET "chapter_id" = ?, "part_id" = ?, "group_id" = ?, "quarter_id" = ? WHERE "id" = ?',
+            (*item[1], item[0]),
+        )
+
+    data = cursor.execute(
+        'SELECT "part_id" FROM "verses" GROUP BY "group_id"'
+    ).fetchall()
+
+    for item in enumerate(data, start=1):
+        cursor.execute(
+            'UPDATE "groups" SET "part_id" = ? WHERE "id" = ?',
+            (*item[1], item[0]),
+        )
+
+    data = cursor.execute(
+        'SELECT "part_id", "group_id" FROM "verses" GROUP BY "quarter_id"'
+    ).fetchall()
+
+    for item in enumerate(data, start=1):
+        cursor.execute(
+            'UPDATE "quarters" SET "part_id" = ?, "group_id" = ? WHERE "id" = ?',
             (*item[1], item[0]),
         )
 
