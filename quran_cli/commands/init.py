@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 from rich import print
 
-from quran_cli import create_db, insert_initial_data
+from quran_cli import create_database, insert_initial_data
 
 
 def init(
@@ -32,10 +32,10 @@ def init(
     )
 
     try:
-        create_db(db_name)
+        create_database(db_name)
         insert_initial_data(db_name)
 
-        print("[bold green]Database created successfully[/bold green]")
+        print("Database created [bold green]successfully[/bold green].")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

@@ -5,7 +5,6 @@ import sqlite3
 from typing import Annotated
 import typer
 from rich import box, print
-from rich.console import Console
 from rich.table import Table
 
 
@@ -42,33 +41,39 @@ def explore(
         cursor = connection.cursor()
 
         print(
-            "[bold]SQLite 3 shell[/bold]\n"
-            "Type [bold red]exit[/bold red] or [bold red]quit[/bold red] to exit."
+            "[bold]QuranCLI Shell[/bold]\n"
+            "Type [bold red]exit[/bold red] or [bold red]quit[/bold red] to exit.\n"
         )
 
         while True:
-            query = typer.prompt("SQLite3", prompt_suffix=" >>> ")
+            query = typer.prompt("sqlite", prompt_suffix=" >>> ")
 
             if query.lower() in ("exit", "quit"):
                 break
 
-            results = cursor.execute(query).fetchall()
+            try:
+                results = cursor.execute(query).fetchall()
 
-            console = Console()
-            table = Table(
-                title="Query Results",
-                title_justify="left",
-                title_style="bold",
-                box=box.ROUNDED,
-            )
+                table = Table(
+                    title="Query Results",
+                    title_justify="left",
+                    title_style="bold",
+                    box=box.ROUNDED,
+                    highlight=True,
+                )
 
-            for column in cursor.description:
-                table.add_column(column[0])
+                for column in cursor.description:
+                    table.add_column(column[0])
 
-            for row in results:
-                table.add_row(*[str(item) for item in row])
+                for row in results:
+                    table.add_row(*[str(item) for item in row])
 
-            console.print(table)
+                print(table)
+
+            except Exception as error:
+                print(f"[bold red]Error[/bold red]: {error}")
+
+                continue
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

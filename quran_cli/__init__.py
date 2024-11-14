@@ -1,9 +1,19 @@
 """ Quran CLI, A tool to generate the most sophisticated Quran data. """
 
+from enum import Enum
 import json
 from pathlib import Path
 import sqlite3
 from typing import List, Literal, Tuple
+from rich import print
+
+
+class ExportFormat(str, Enum):
+    """Export formats"""
+
+    CSV = "csv"
+    XML = "xml"
+    JSON = "json"
 
 
 def execute_sql_script(db_name: str, script: str) -> None:
@@ -35,18 +45,36 @@ def execute_sql_file(db_name: str, path: Path) -> None:
         execute_sql_script(db_name, file.read())
 
 
-def create_db(db_name: str) -> None:
+def create_database(db_name: str) -> None:
     """
-    Creates the database to insert quran text.
+    Creates the database to insert Quran text.
 
     Args:
         name (str): Database filename
     """
 
+    print("Creating [bold]the database[/bold]...", end=" ")
     execute_sql_file(
         db_name,
         Path(__file__).parent / "assets" / "schemas" / "initial.sql",
     )
+    print("[bold green]Done[/bold green]")
+
+
+def create_views(db_name: str) -> None:
+    """
+    Creates views to help with data access.
+
+    Args:
+        name (str): Database filename
+    """
+
+    print("Creating [bold]the views[/bold]...", end=" ")
+    execute_sql_file(
+        db_name,
+        Path(__file__).parent / "assets" / "schemas" / "views.sql",
+    )
+    print("[bold green]Done[/bold green]")
 
 
 def insert_initial_data(db_name: str) -> None:
@@ -57,10 +85,12 @@ def insert_initial_data(db_name: str) -> None:
         db_name (str): Database filename
     """
 
+    print("Inserting [bold]initial data[/bold]...", end=" ")
     execute_sql_file(
         db_name,
         Path(__file__).parent / "assets" / "data" / "initial.sql",
     )
+    print("[bold green]Done[/bold green]")
 
 
 def apply_normalized_schema(db_name: str) -> None:
@@ -71,10 +101,12 @@ def apply_normalized_schema(db_name: str) -> None:
         db_name (str): Database filename
     """
 
+    print("Applying [bold]normalized schema[/bold]...", end=" ")
     execute_sql_file(
         db_name,
         Path(__file__).parent / "assets" / "schemas" / "normalized.sql",
     )
+    print("[bold green]Done[/bold green]")
 
 
 def insert_chapters(db_name: str) -> None:
@@ -85,10 +117,12 @@ def insert_chapters(db_name: str) -> None:
         db_name (str): Database filename
     """
 
+    print("Inserting [bold]chapters[/bold]...", end=" ")
     execute_sql_file(
         db_name,
         Path(__file__).parent / "assets" / "data" / "chapters.sql",
     )
+    print("[bold green]Done[/bold green]")
 
 
 def get_verse(
@@ -182,21 +216,12 @@ def insert_verses(db_name: str) -> None:
         db_name (str): Database filename
     """
 
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
-
-    verses = cursor.execute(
-        'SELECT "number", "content", "chapter_id" FROM "quran"'
-    ).fetchall()
-
-    for verse in verses:
-        cursor.execute(
-            'INSERT INTO "verses" ("number", "content", "chapter_id") VALUES (?, ?, ?);',
-            verse,
-        )
-
-    connection.commit()
-    connection.close()
+    print("Inserting [bold]verses[/bold]...", end=" ")
+    execute_sql_script(
+        db_name,
+        'INSERT INTO "verses" ("number", "content", "chapter_id") SELECT "number", "content", "chapter_id" FROM "quran";',
+    )
+    print("[bold green]Done[/bold green]")
 
 
 def insert_metadata(db_name: str) -> None:
@@ -210,6 +235,10 @@ def insert_metadata(db_name: str) -> None:
         bool: True if the data is inserted successfully else False.
     """
 
+    print(
+        "Inserting data into [bold]parts, groups, quarters and pages tables[/bold]...",
+        end=" ",
+    )
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
@@ -227,6 +256,7 @@ def insert_metadata(db_name: str) -> None:
 
     connection.commit()
     connection.close()
+    print("[bold green]Done[/bold green]")
 
 
 def add_verse_related_fields(db_name: str) -> None:
@@ -237,6 +267,10 @@ def add_verse_related_fields(db_name: str) -> None:
         db_name (str): Database filename
     """
 
+    print(
+        "Updating [bold]verses[/bold] table to add [bold]part_id, group_id, quarter_id and page_id[/bold]...",
+        end=" ",
+    )
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
@@ -271,6 +305,7 @@ def add_verse_related_fields(db_name: str) -> None:
 
     connection.commit()
     connection.close()
+    print("[bold green]Done[/bold green]")
 
 
 def add_verse_count(db_name: str) -> None:
@@ -281,6 +316,7 @@ def add_verse_count(db_name: str) -> None:
         db_name (str): Database filename
     """
 
+    print("Adding [bold]verse_count[/bold]...", end=" ")
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
@@ -297,6 +333,7 @@ def add_verse_count(db_name: str) -> None:
 
     connection.commit()
     connection.close()
+    print("[bold green]Done[/bold green]")
 
 
 def add_related_fields(db_name: str) -> None:
@@ -307,6 +344,10 @@ def add_related_fields(db_name: str) -> None:
         db_name (str): Database filename
     """
 
+    print(
+        "Adding related fields data to [bold]groups, quarters and pages tables[/bold]...",
+        end=" ",
+    )
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
@@ -342,3 +383,4 @@ def add_related_fields(db_name: str) -> None:
 
     connection.commit()
     connection.close()
+    print("[bold green]Done[/bold green]")

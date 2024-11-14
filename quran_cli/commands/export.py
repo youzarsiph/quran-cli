@@ -1,6 +1,5 @@
 """ Export Quran """
 
-from enum import Enum
 import os
 import sqlite3
 from pathlib import Path
@@ -9,13 +8,7 @@ import pandas as pd
 import typer
 from rich import print
 
-
-class ExportFormat(str, Enum):
-    """Export formats"""
-
-    CSV = "csv"
-    XML = "xml"
-    JSON = "json"
+from quran_cli import ExportFormat
 
 
 def export(
@@ -60,10 +53,19 @@ def export(
         connection = sqlite3.connect(database.name)
         os.makedirs(output, exist_ok=True)
 
-        tables = ["chapters", "parts", "groups", "quarters", "pages", "verses"]
+        tables = [
+            "chapters",
+            "parts",
+            "groups",
+            "quarters",
+            "pages",
+            "verses",
+            "al-quran",
+        ]
 
         for table in tables:
-            data = pd.read_sql(sql=f"SELECT * FROM {table}", con=connection)
+            print(f"Exporting [bold]{table}[/bold] table...", end=" ")
+            data = pd.read_sql(sql=f'SELECT * FROM "{table}"', con=connection)
 
             filename = os.path.join(output.name, table)
 
@@ -97,9 +99,13 @@ def export(
                     ) as file:
                         data.to_xml(file)
 
+            print("[bold green]Done[/bold green]")
+
         connection.close()
 
-        print("[bold green]Export completed successfully[/bold green]")
+        print(
+            f"Export to [bold yellow]{format.value}[/bold yellow] completed [bold green]successfully[/bold green]."
+        )
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

@@ -7,6 +7,7 @@ from rich import print
 
 from quran_cli import (
     apply_normalized_schema,
+    create_views,
     insert_chapters,
     insert_metadata,
     insert_verses,
@@ -52,8 +53,9 @@ def normalize(
         add_verse_related_fields(db_name)
         add_verse_count(db_name)
         add_related_fields(db_name)
+        create_views(db_name)
 
-        print("[bold green]Normalization completed successfully[/bold green]")
+        print("Normalization completed [bold green]successfully[/bold green].")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")
