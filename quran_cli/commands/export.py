@@ -60,7 +60,7 @@ def export(
             "quarters",
             "pages",
             "verses",
-            "al-quran",
+            "al_quran",
         ]
 
         for table in tables:
