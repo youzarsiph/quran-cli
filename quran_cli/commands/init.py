@@ -5,7 +5,7 @@ from typing import Annotated
 import typer
 from rich import print
 
-from quran_cli import create_database, insert_initial_data
+from quran_cli.utils import create_database, insert_initial_data
 
 
 def init(

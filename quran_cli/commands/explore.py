@@ -60,6 +60,7 @@ def explore(
                     title_style="bold",
                     box=box.ROUNDED,
                     highlight=True,
+                    show_lines=True,
                 )
 
                 for column in cursor.description:

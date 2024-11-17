@@ -8,7 +8,7 @@ import pandas as pd
 import typer
 from rich import print
 
-from quran_cli import ExportFormat
+from quran_cli import DataFormat
 
 
 def export(
@@ -23,9 +23,9 @@ def export(
         ),
     ] = Path("quran"),
     format: Annotated[
-        Optional[ExportFormat],
+        Optional[DataFormat],
         typer.Option("-f", "--format", help="Export format."),
-    ] = ExportFormat.JSON,
+    ] = DataFormat.JSON,
 ) -> None:
     """
     Export Quran data to csv, json, xml format.

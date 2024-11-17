@@ -5,7 +5,8 @@ from typing import Annotated
 import typer
 from rich import print
 
-from quran_cli import (
+from quran_cli.utils import (
+    add_page_count,
     apply_normalized_schema,
     create_views,
     insert_chapters,
@@ -53,6 +54,7 @@ def normalize(
         add_verse_related_fields(db_name)
         add_verse_count(db_name)
         add_related_fields(db_name)
+        add_page_count(db_name)
         create_views(db_name)
 
         print("Normalization completed [bold green]successfully[/bold green].")
