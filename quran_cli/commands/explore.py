@@ -54,22 +54,26 @@ def explore(
             try:
                 results = cursor.execute(query).fetchall()
 
-                table = Table(
-                    title="Query Results",
-                    title_justify="left",
-                    title_style="bold",
-                    box=box.ROUNDED,
-                    highlight=True,
-                    show_lines=True,
-                )
+                if len(results) >= 1:
+                    table = Table(
+                        title="Query Results",
+                        title_justify="left",
+                        title_style="bold",
+                        box=box.ROUNDED,
+                        highlight=True,
+                        show_lines=True,
+                    )
 
-                for column in cursor.description:
-                    table.add_column(column[0])
+                    for column in cursor.description:
+                        table.add_column(column[0])
 
-                for row in results:
-                    table.add_row(*[str(item) for item in row])
+                    for row in results:
+                        table.add_row(*[str(item) for item in row])
 
-                print(table)
+                    print(table)
+
+                else:
+                    print("Query executed [bold green]successfully[/bold green].")
 
             except Exception as error:
                 print(f"[bold red]Error[/bold red]: {error}")

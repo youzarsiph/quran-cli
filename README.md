@@ -125,11 +125,18 @@ quran-cli init [OPTIONS] DATABASE
 
 - `DATABASE`: Specifies the name and path of the new database file. `required`
 
+**Options:**
+
+- `-v, --variant [simple-clean|simple-min|simple-plain|simple|uthmani|uthmani-min]`: Data variant to load. *default: uthmani*
+
 **Examples:**
 
 ```bash
 # Create a new database
 quran-cli init db.sqlite3
+
+# Create a new database with simple variant
+quran-cli init db.sqlite3 -v simple
 ```
 
 ---

@@ -68,7 +68,7 @@ def create_views(db_name: str) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def insert_initial_data(db_name: str) -> None:
+def insert_initial_data(db_name: str, variant: str) -> None:
     """
     Inserts the Quran text into the database
 
@@ -79,7 +79,7 @@ def insert_initial_data(db_name: str) -> None:
     print("Inserting [bold]initial data[/bold]...", end=" ")
     execute_sql_file(
         db_name,
-        Path(__file__).parent / "assets" / "data" / "initial.sql",
+        Path(__file__).parent / "assets" / "data" / f"{variant}.sql",
     )
     print("[bold green]Done[/bold green]")
 
