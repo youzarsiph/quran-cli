@@ -1,4 +1,4 @@
-""" Interact with Quran db using SQL """
+"""SQL Explore command"""
 
 from pathlib import Path
 import sqlite3
@@ -12,13 +12,10 @@ def explore(
     database: Annotated[
         Path,
         typer.Argument(exists=True, dir_okay=False, help="Database name"),
-    ]
+    ],
 ) -> None:
     """
     Explore the Quran database with SQL.
-
-    Args:
-        database (Path): Database file.
 
     Examples:
 

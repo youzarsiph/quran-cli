@@ -1,4 +1,4 @@
-""" Normalize initial Quran db """
+"""Normalize command"""
 
 from pathlib import Path
 from typing import Annotated
@@ -21,14 +21,11 @@ from quran_cli.utils import (
 def normalize(
     database: Annotated[
         Path,
-        typer.Argument(exists=True, dir_okay=False, help="Database name"),
-    ]
+        typer.Argument(exists=True, dir_okay=False, help="Database file"),
+    ],
 ) -> None:
     """
     Normalize initial Quran database.
-
-    Args:
-        name (str): Database filename.
 
     Examples:
 

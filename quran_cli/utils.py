@@ -1,4 +1,4 @@
-""" Utility functions """
+"""Utility functions"""
 
 import json
 from pathlib import Path
@@ -387,6 +387,7 @@ def add_related_fields(db_name: str) -> None:
             "update": 'UPDATE "pages" SET "chapter_id" = ?, "part_id" = ?, "group_id" = ?, "quarter_id" = ? WHERE "id" = ?',
         },
     ]
+
     for table in tables:
         data = cursor.execute(table["select"]).fetchall()
 

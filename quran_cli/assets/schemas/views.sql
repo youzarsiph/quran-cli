@@ -1,5 +1,5 @@
-DROP 
-  VIEW IF EXISTS "al_quran";
+DROP VIEW IF EXISTS "al_quran";
+
 CREATE VIEW "al_quran" AS 
 SELECT 
   "verses"."id", 

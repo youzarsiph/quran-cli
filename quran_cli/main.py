@@ -1,4 +1,4 @@
-""" Quran CLI """
+"""Quran CLI"""
 
 import typer
 from quran_cli.commands import command_list

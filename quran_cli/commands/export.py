@@ -1,14 +1,12 @@
-""" Export Quran """
+"""JSON Export command"""
 
+import json
 import os
 import sqlite3
 from pathlib import Path
-from typing import Annotated, Optional
-import pandas as pd
+from typing import Annotated
 import typer
 from rich import print
-
-from quran_cli import DataFormat
 
 
 def export(
@@ -17,23 +15,18 @@ def export(
         typer.Argument(exists=True, dir_okay=False, help="Database name"),
     ],
     output: Annotated[
-        Optional[Path],
+        Path,
         typer.Option(
-            "-o", "--output", file_okay=False, dir_okay=True, help="Output folder"
+            "-o",
+            "--output",
+            file_okay=False,
+            dir_okay=True,
+            help="Output folder",
         ),
     ] = Path("quran"),
-    format: Annotated[
-        Optional[DataFormat],
-        typer.Option("-f", "--format", help="Export format."),
-    ] = DataFormat.JSON,
 ) -> None:
     """
-    Export Quran data to csv, json, xml format.
-
-    Args:
-        database (Path): Database filename.
-        output (Path, optional): Output folder.
-        format (str, optional): Export format.
+    Export Quran data to json.
 
     Examples:
 
@@ -45,67 +38,86 @@ def export(
     quran-cli normalize db.sqlite3
 
     # Export normalized database
-    quran-cli export db.sqlite3 -f json
+    quran-cli export db.sqlite3
+    quran-cli export db.sqlite3 -o data
     ```
     """
 
     try:
         connection = sqlite3.connect(database.name)
-        os.makedirs(output, exist_ok=True)
+        os.makedirs(output.name, exist_ok=True)
 
-        tables = [
-            "chapters",
-            "parts",
-            "groups",
-            "quarters",
-            "pages",
-            "verses",
-            "al_quran",
-        ]
+        tables = {
+            "chapters": {
+                0: "id",
+                1: "name",
+                2: "order",
+                3: "type",
+                4: "verse_count",
+                5: "page_count",
+            },
+            "parts": {0: "id", 1: "name", 2: "verse_count", 3: "page_count"},
+            "groups": {
+                0: "id",
+                1: "name",
+                2: "verse_count",
+                3: "page_count",
+                4: "part_id",
+            },
+            "quarters": {
+                0: "id",
+                1: "name",
+                2: "verse_count",
+                3: "page_count",
+                4: "group_id",
+                5: "part_id",
+            },
+            "pages": {
+                0: "id",
+                1: "name",
+                2: "verse_count",
+                3: "chapter_id",
+                4: "group_id",
+                5: "part_id",
+                6: "quarter_id",
+            },
+            "verses": {
+                0: "id",
+                1: "number",
+                2: "content",
+                3: "chapter_id",
+                4: "group_id",
+                5: "page_id",
+                6: "part_id",
+                7: "quarter_id",
+            },
+        }
 
-        for table in tables:
-            print(f"Exporting [bold]{table}[/bold] table...", end=" ")
-            data = pd.read_sql(sql=f'SELECT * FROM "{table}"', con=connection)
+        for name, fields in tables.items():
+            print(f"Exporting [bold]{name}[/bold] table...", end=" ")
 
-            filename = os.path.join(output.name, table)
-
-            match format:
-                case "csv":
-                    with open(
-                        f"{filename}.csv",
-                        mode="w",
-                        encoding="utf-8",
-                    ) as file:
-                        data.to_csv(file, index=False)
-
-                case "json":
-                    with open(
-                        f"{filename}.json",
-                        mode="w",
-                        encoding="utf-8",
-                    ) as file:
-                        data.to_json(
-                            file,
-                            orient="records",
-                            indent=2,
-                            force_ascii=False,
-                        )
-
-                case "xml":
-                    with open(
-                        f"{filename}.xml",
-                        mode="w",
-                        encoding="utf-8",
-                    ) as file:
-                        data.to_xml(file)
+            with open(
+                f"{os.path.join(output.name, name)}.json",
+                mode="w",
+                encoding="utf-8",
+            ) as file:
+                json.dump(
+                    [
+                        {fields[k]: v for k, v in list(enumerate(row))}
+                        for row in connection.cursor()
+                        .execute(f'SELECT * FROM "{name}"')
+                        .fetchall()
+                    ],
+                    file,
+                    indent=2,
+                    ensure_ascii=False,
+                )
 
             print("[bold green]Done[/bold green]")
 
         connection.close()
 
-        print(
-            f"Export to [bold yellow]{format.value}[/bold yellow] completed [bold green]successfully[/bold green]."
-        )
+        print("Export completed [bold green]successfully[/bold green].")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

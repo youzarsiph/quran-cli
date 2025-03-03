@@ -28,14 +28,8 @@ Before contributing, please review our [Code of Conduct](CODE_OF_CONDUCT.md). We
 4. **Install Dependencies:**
 
    ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Install Pre-commit Hooks:**
-   - We use pre-commit hooks to ensure code quality and consistency.
-
-   ```bash
-   pre-commit install
+   pip install poetry
+   poetry install
    ```
 
 ## How to Contribute
@@ -99,7 +93,7 @@ Before contributing, please review our [Code of Conduct](CODE_OF_CONDUCT.md). We
 
 ### Dependency Management
 
-- **Dependency Updates**: Use [`pip-tools`](https://github.com/jazzband/pip-tools) to manage dependency versions.
+- **Dependency Updates**: Use [`poetry`](https://github.com/python-poetry/poetry) to manage dependency versions.
 - **Submitting Dependency Updates**: Create a pull request with a description of the updates.
 
 ### Documentation

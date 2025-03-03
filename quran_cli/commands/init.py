@@ -1,4 +1,4 @@
-""" Init Quran db """
+"""Init command"""
 
 from pathlib import Path
 from typing import Annotated

@@ -1,4 +1,4 @@
-""" Package entry point """
+"""Package entry point"""
 
 from quran_cli.main import app
 
