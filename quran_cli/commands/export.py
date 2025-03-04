@@ -12,7 +12,7 @@ from rich import print
 def export(
     database: Annotated[
         Path,
-        typer.Argument(exists=True, dir_okay=False, help="Database name"),
+        typer.Argument(exists=True, dir_okay=False, help="Database file"),
     ],
     output: Annotated[
         Path,
@@ -44,8 +44,8 @@ def export(
     """
 
     try:
-        connection = sqlite3.connect(database.name)
-        os.makedirs(output.name, exist_ok=True)
+        connection = sqlite3.connect(database)
+        os.makedirs(output, exist_ok=True)
 
         tables = {
             "chapters": {
@@ -97,7 +97,7 @@ def export(
             print(f"Exporting [bold]{name}[/bold] table...", end=" ")
 
             with open(
-                f"{os.path.join(output.name, name)}.json",
+                f"{os.path.join(output, name)}.json",
                 mode="w",
                 encoding="utf-8",
             ) as file:

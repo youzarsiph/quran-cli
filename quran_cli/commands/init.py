@@ -1,12 +1,13 @@
 """Init command"""
 
 from pathlib import Path
+import sqlite3
 from typing import Annotated
 import typer
 from rich import print
 
 from quran_cli import QuranVariant
-from quran_cli.utils import create_database, insert_initial_data
+from quran_cli.utils import create_database, get_database_name, insert_initial_data
 
 
 def init(
@@ -25,20 +26,20 @@ def init(
     # Create initial database
     quran-cli init db.sqlite3
 
-    # Create initial database with Uthmani variant
-    quran-cli init db.sqlite3 -v uthmani
+    # Create initial database with uthmani-min variant
+    quran-cli init db.sqlite3 -v uthmani-min
     ```
     """
 
-    db_name = (
-        database.name.split(".")[0] + f'{variant.value}.{database.name.split(".")[-1]}'
-        if database.name.endswith((".sqlite3", ".db"))
-        else database.name + f"-{variant.value}.sqlite3"
-    )
+    name = get_database_name(database)
 
     try:
-        create_database(db_name)
-        insert_initial_data(db_name, variant.value)
+        connection = sqlite3.connect(name)
+
+        create_database(connection)
+        insert_initial_data(connection, variant.value)
+
+        connection.close()
 
         print("Database created [bold green]successfully[/bold green].")
 

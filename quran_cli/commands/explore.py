@@ -11,7 +11,7 @@ from rich.table import Table
 def explore(
     database: Annotated[
         Path,
-        typer.Argument(exists=True, dir_okay=False, help="Database name"),
+        typer.Argument(exists=True, dir_okay=False, help="Database file"),
     ],
 ) -> None:
     """
@@ -27,14 +27,8 @@ def explore(
     ```
     """
 
-    db_name = (
-        database.name
-        if database.name.endswith((".sqlite3", ".db"))
-        else database.name + ".sqlite3"
-    )
-
     try:
-        connection = sqlite3.connect(db_name)
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
 
         print(
@@ -46,6 +40,7 @@ def explore(
             query = typer.prompt("sqlite", prompt_suffix=" >>> ")
 
             if query.lower() in ("exit", "quit"):
+                connection.close()
                 break
 
             try:
@@ -76,6 +71,8 @@ def explore(
                 print(f"[bold red]Error[/bold red]: {error}")
 
                 continue
+
+        connection.close()
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

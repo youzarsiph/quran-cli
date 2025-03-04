@@ -44,10 +44,39 @@ quran-cli [OPTIONS] COMMAND [ARGS]...
 
 ### Available Commands
 
+- `clear`: Drops unused tables after normalization.
 - `explore`: Enables SQL-based querying of the Qur'an database.
 - `export`: Exports Qur'an data in various formats, such as CSV, JSON, and XML.
 - `init`: Initializes a new Qur'an database.
 - `normalize`: Normalizes the structure and content of an existing database.
+
+---
+
+#### `clear`
+
+Drops unused tables after normalization.
+
+**Command Syntax:**
+
+```console
+quran-cli clear DATABASE
+```
+
+**Arguments:**
+
+- `DATABASE`: Specifies the database file to clear. `required`
+
+**Examples:**
+
+```bash
+# Initialize a new database
+quran-cli init db.sqlite3
+
+# Normalize the database
+quran-cli normalize db.sqlite3
+
+quran-cli clear db.sqlite3
+```
 
 ---
 
