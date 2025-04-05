@@ -51,15 +51,15 @@ def execute_sql_file(database: sqlite3.Connection, path: Path) -> None:
         execute_sql_script(database, file.read())
 
 
-def create_database(database: sqlite3.Connection) -> None:
+def create_initial_schema(database: sqlite3.Connection) -> None:
     """
-    Creates the database to insert Quran text.
+    Creates the initial schema to insert Quran text.
 
     Args:
         name (str): Database filename
     """
 
-    print("Creating [bold]the database[/bold]...", end=" ")
+    print("Creating [bold]the initial schema[/bold]...", end=" ")
     execute_sql_file(
         database,
         Path(__file__).parent / "assets" / "schemas" / "initial.sql",
@@ -83,7 +83,7 @@ def create_views(database: sqlite3.Connection) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def insert_initial_data(database: sqlite3.Connection, variant: str) -> None:
+def insert_initial_data(database: sqlite3.Connection) -> None:
     """
     Inserts the Quran text into the database
 
@@ -94,20 +94,20 @@ def insert_initial_data(database: sqlite3.Connection, variant: str) -> None:
     print("Inserting [bold]initial data[/bold]...", end=" ")
     execute_sql_file(
         database,
-        Path(__file__).parent / "assets" / "data" / f"{variant}.sql",
+        Path(__file__).parent / "assets" / "data" / "verses.sql",
     )
     print("[bold green]Done[/bold green]")
 
 
-def apply_normalized_schema(database: sqlite3.Connection) -> None:
+def create_normalized_schema(database: sqlite3.Connection) -> None:
     """
-    Creates the tables to normalize the initial db.
+    Creates the normalized schema to normalize the initial database.
 
     Args:
         database (sqlite3.Connection): Database connection
     """
 
-    print("Applying [bold]normalized schema[/bold]...", end=" ")
+    print("Creating [bold]the normalized schema[/bold]...", end=" ")
     execute_sql_file(
         database,
         Path(__file__).parent / "assets" / "schemas" / "normalized.sql",
@@ -115,12 +115,15 @@ def apply_normalized_schema(database: sqlite3.Connection) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def insert_chapters(database: sqlite3.Connection) -> None:
+def insert_chapters(
+    database: sqlite3.Connection, with_diacritics: bool = False
+) -> None:
     """
     Insert chapters (Al-Suwar) data into the database.
 
     Args:
         database (sqlite3.Connection): Database connection
+        with_diacritics (bool): Weather to include arabic diacritics in chapter names
     """
 
     print("Inserting [bold]chapters[/bold]...", end=" ")
@@ -128,6 +131,18 @@ def insert_chapters(database: sqlite3.Connection) -> None:
         database,
         Path(__file__).parent / "assets" / "data" / "chapters.sql",
     )
+
+    if with_diacritics:
+        with open(
+            Path(__file__).parent / "assets" / "data" / "chapters.json",
+            encoding="utf-8",
+        ) as f:
+            for c in json.load(f):
+                database.cursor().execute(
+                    'UPDATE "chapters" SET "name" = ? WHERE "id" = ?',
+                    (c["new_name"], c["id"]),
+                )
+
     print("[bold green]Done[/bold green]")
 
 
@@ -137,7 +152,7 @@ def get_verse(
     verse_number: int,
 ) -> Tuple[int, int, int, str]:
     """
-    Get a page from the database.
+    Get a verse by chapter id and verse number.
 
     Args:
         database (sqlite3.Connection): Database connection
@@ -158,13 +173,13 @@ def get_verse(
     )
 
 
-def extract_range_data(
+def get_verse_range(
     database: sqlite3.Connection,
     start: Tuple[int, int],
     end: Tuple[int, int],
 ) -> Tuple[int, int]:
     """
-    Extracts the verse range from the database as (start_verse_id, end_verse_id).
+    Get the verse range as (start_verse_id, end_verse_id).
 
     Args:
         database (sqlite3.Connection): Database connection
@@ -181,19 +196,20 @@ def extract_range_data(
     )
 
 
-def get_range_data(
+def get_table_verse_range(
     database: sqlite3.Connection,
     table: Literal["parts", "pages", "quarters"],
 ) -> List[Tuple[int, int]]:
     """
-    Extracts the verse range from the database as (start_verse_id, end_verse_id).
+    Get verse ranges for each part, quarter and page as (start_verse_id, end_verse_id).
+    The index of the item in the returned list represents the id of the part, quarter or page.
 
     Args:
         database (sqlite3.Connection): Database connection
         table (str): Table name
 
     Returns:
-        Tuple[int, int]: Tuple with range data
+        List[Tuple[int, int]]: Verse range representation of each item in the list.
     """
 
     with open(
@@ -206,7 +222,7 @@ def get_range_data(
         res = []
         for index, item in enumerate(data):
             if index < len(data) - 1:
-                res.append(extract_range_data(database, item, data[index + 1]))
+                res.append(get_verse_range(database, item, data[index + 1]))
             else:
                 res.append((res[-1][1] + 1, 6236))
 
@@ -230,9 +246,9 @@ def insert_verses(database: sqlite3.Connection) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def insert_metadata(database: sqlite3.Connection) -> None:
+def insert_table_data(database: sqlite3.Connection) -> None:
     """
-    Insert parts, pages metadata into the database.
+    Insert data into parts, groups, quarters and pages tables.
 
     Args:
         database (sqlite3.Connection): Database connection
@@ -265,16 +281,17 @@ def insert_metadata(database: sqlite3.Connection) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def add_verse_related_fields(database: sqlite3.Connection) -> None:
+def set_verse_fks(database: sqlite3.Connection) -> None:
     """
-    Add part_id, group_id, quarter_id and page_id to verses table.
+    Update the verses table to set part_id, group_id, quarter_id and page_id.
 
     Args:
         database (sqlite3.Connection): Database connection
     """
 
     print(
-        "Updating [bold]verses[/bold] table to add [bold]part_id, group_id, quarter_id and page_id[/bold]...",
+        "Updating [bold]verses[/bold] table to set "
+        "[bold]part_id, group_id, quarter_id and page_id[/bold]...",
         end=" ",
     )
 
@@ -282,7 +299,7 @@ def add_verse_related_fields(database: sqlite3.Connection) -> None:
 
     tables = ["parts", "pages", "quarters"]
     for table in tables:
-        data = get_range_data(database, table)
+        data = get_table_verse_range(database, table)
 
         for i, item in enumerate(data, start=1):
             cursor.execute(
@@ -293,7 +310,7 @@ def add_verse_related_fields(database: sqlite3.Connection) -> None:
         database.commit()
 
     # Insert group data
-    data = get_range_data(database, "quarters")
+    data = get_table_verse_range(database, "quarters")
     ahzab = [
         (data[i][0], data[i + 3][1] if i + 4 < len(data) - 1 else 6236)
         for i in range(0, 240, 4)
@@ -309,15 +326,15 @@ def add_verse_related_fields(database: sqlite3.Connection) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def add_verse_count(database: sqlite3.Connection) -> None:
+def set_verse_count(database: sqlite3.Connection) -> None:
     """
-    Add verse_count to tables.
+    Update corresponding tables to set verse_count.
 
     Args:
         database (sqlite3.Connection): Database connection
     """
 
-    print("Adding [bold]verse_count[/bold]...", end=" ")
+    print("Setting [bold]verse_count[/bold]...", end=" ")
 
     cursor = database.cursor()
 
@@ -337,22 +354,23 @@ def add_verse_count(database: sqlite3.Connection) -> None:
     print("[bold green]Done[/bold green]")
 
 
-def add_page_count(database: sqlite3.Connection) -> None:
+def set_page_count(database: sqlite3.Connection) -> None:
     """
-    Add page_count to tables.
+    Update corresponding tables to set page_count.
 
     Args:
         database (sqlite3.Connection): Database connection
     """
 
-    print("Adding [bold]page_count[/bold]...", end=" ")
+    print("Setting [bold]page_count[/bold]...", end=" ")
 
     cursor = database.cursor()
 
     tables = ["chapters", "parts", "groups", "quarters"]
     for table in tables:
         data = cursor.execute(
-            f'SELECT COUNT(*) FROM "pages" GROUP BY "{table[:-1]}_id"'
+            f'SELECT COUNT(DISTINCT "pages"."id") FROM "pages" INNER JOIN "verses" ON '
+            f'("pages"."id" = "verses"."page_id") GROUP BY "verses"."{table[:-1]}_id"'
         ).fetchall()
 
         for i, item in enumerate(data, start=1):
@@ -360,26 +378,21 @@ def add_page_count(database: sqlite3.Connection) -> None:
                 f'UPDATE {table} SET "page_count" = ? WHERE "id" = ?', (item[0], i)
             )
 
-        database.commit()
-
-        # Set page count for chapters that are shorter than 1 page
-        cursor.execute(f'UPDATE {table} SET "page_count" = 1 WHERE "page_count" = 0')
-
     database.commit()
 
     print("[bold green]Done[/bold green]")
 
 
-def add_related_fields(database: sqlite3.Connection) -> None:
+def set_foreign_keys(database: sqlite3.Connection) -> None:
     """
-    Add chapter_id, part_id, group_id and quarter_id to pages, groups and quartes tables.
+    Update groups, quarters and pages tables to set foreign keys.
 
     Args:
         database (sqlite3.Connection): Database connection
     """
 
     print(
-        "Adding related fields data to [bold]groups, quarters and pages tables[/bold]...",
+        "Setting foreign keys for [bold]groups, quarters and pages tables[/bold]...",
         end=" ",
     )
 
@@ -411,4 +424,20 @@ def add_related_fields(database: sqlite3.Connection) -> None:
 
     database.commit()
 
+    print("[bold green]Done[/bold green]")
+
+
+def insert_interpretations(database: sqlite3.Connection) -> None:
+    """
+    Insert interpolations (Tafsir) data into the database.
+
+    Args:
+        database (sqlite3.Connection): Database connection
+    """
+
+    print("Inserting [bold]interpolations[/bold]...", end=" ")
+    execute_sql_file(
+        database,
+        Path(__file__).parent / "assets" / "data" / "test.sql",
+    )
     print("[bold green]Done[/bold green]")

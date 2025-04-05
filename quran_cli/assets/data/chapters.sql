@@ -1,6 +1,4 @@
-INSERT INTO
-  "chapters" ("name", "type", "order", "verse_count")
-VALUES
+INSERT INTO "chapters" ("name", "type", "order", "verse_count") VALUES
   ("الفاتحة", 1, 5, 7),
   ("البقرة", 0, 87, 286),
   ("آل عمران", 0, 89, 200),

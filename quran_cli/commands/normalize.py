@@ -14,6 +14,14 @@ def normalize(
         Path,
         typer.Argument(exists=True, dir_okay=False, help="Database file"),
     ],
+    diacritics: Annotated[
+        bool,
+        typer.Option(
+            "-d",
+            "--with-diacritics",
+            help="Weather to include Arabic diacritics in chapter names",
+        ),
+    ] = False,
 ) -> None:
     """
     Normalize initial Quran database.
@@ -31,19 +39,21 @@ def normalize(
     try:
         connection = sqlite3.connect(database)
 
-        utils.apply_normalized_schema(connection)
-        utils.insert_chapters(connection)
+        print(f"Normalizing [bold]{database}[/bold]...")
+
+        utils.create_normalized_schema(connection)
+        utils.insert_chapters(connection, diacritics)
         utils.insert_verses(connection)
-        utils.insert_metadata(connection)
-        utils.add_verse_related_fields(connection)
-        utils.add_verse_count(connection)
-        utils.add_related_fields(connection)
-        utils.add_page_count(connection)
+        utils.insert_table_data(connection)
+        utils.set_verse_fks(connection)
+        utils.set_verse_count(connection)
+        utils.set_foreign_keys(connection)
+        utils.set_page_count(connection)
         utils.create_views(connection)
 
         connection.close()
 
-        print("Normalization completed [bold green]successfully[/bold green].")
+        print("Normalization [bold green]completed[/bold green].")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

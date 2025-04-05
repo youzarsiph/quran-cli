@@ -52,6 +52,50 @@ quran-cli [OPTIONS] COMMAND [ARGS]...
 
 ---
 
+#### `init`
+
+Creates a new Qur'an database.
+
+**Command Syntax:**
+
+```console
+quran-cli init [OPTIONS] DATABASE
+```
+
+**Arguments:**
+
+- `DATABASE`: Specifies the name and path of the new database file. `required`
+
+**Examples:**
+
+```bash
+# Create a new database
+quran-cli init db.sqlite3
+```
+
+---
+
+#### `normalize`
+
+Normalizes the structure and content of an existing Qur'an database.
+
+**Command Syntax:**
+
+```console
+quran-cli normalize [OPTIONS] DATABASE
+```
+
+**Arguments:**
+
+- `DATABASE`: Specifies the database file to normalize. `required`
+
+**Examples:**
+
+```bash
+# Normalize an existing database
+quran-cli normalize db.sqlite3
+```
+
 #### `clear`
 
 Drops unused tables after normalization.
@@ -122,8 +166,7 @@ quran-cli export [OPTIONS] DATABASE
 
 **Options:**
 
-- `-o, --output DIRECTORY`: Defines the output directory for the exported files. *default: quran*
-- `-f, --format [csv|xml|json]`: Specifies the data format for exportation. *default: json*
+- `-o, --output DIRECTORY`: Defines the output directory for the exported files. *default: json*
 
 **Examples:**
 
@@ -139,57 +182,6 @@ quran-cli export db.sqlite3 -f json
 ```
 
 ---
-
-#### `init`
-
-Creates a new Qur'an database.
-
-**Command Syntax:**
-
-```console
-quran-cli init [OPTIONS] DATABASE
-```
-
-**Arguments:**
-
-- `DATABASE`: Specifies the name and path of the new database file. `required`
-
-**Options:**
-
-- `-v, --variant [simple-clean|simple-min|simple-plain|simple|uthmani|uthmani-min]`: Data variant to load. *default: uthmani*
-
-**Examples:**
-
-```bash
-# Create a new database
-quran-cli init db.sqlite3
-
-# Create a new database with simple variant
-quran-cli init db.sqlite3 -v simple
-```
-
----
-
-#### `normalize`
-
-Normalizes the structure and content of an existing Qur'an database.
-
-**Command Syntax:**
-
-```console
-quran-cli normalize [OPTIONS] DATABASE
-```
-
-**Arguments:**
-
-- `DATABASE`: Specifies the database file to normalize. `required`
-
-**Examples:**
-
-```bash
-# Normalize an existing database
-quran-cli normalize db.sqlite3
-```
 
 ## Contributing
 

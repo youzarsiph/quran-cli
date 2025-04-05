@@ -23,7 +23,7 @@ def export(
             dir_okay=True,
             help="Output folder",
         ),
-    ] = Path("quran"),
+    ] = Path("json"),
 ) -> None:
     """
     Export Quran data to json.
@@ -47,7 +47,9 @@ def export(
         connection = sqlite3.connect(database)
         os.makedirs(output, exist_ok=True)
 
-        tables = {
+        print(f"Exporting [bold]{database}[/bold]:")
+
+        table_fields_map = {
             "chapters": {
                 0: "id",
                 1: "name",
@@ -93,8 +95,8 @@ def export(
             },
         }
 
-        for name, fields in tables.items():
-            print(f"Exporting [bold]{name}[/bold] table...", end=" ")
+        for name, fields in table_fields_map.items():
+            print(f"    - [bold]{name}[/bold] table...", end=" ")
 
             with open(
                 f"{os.path.join(output, name)}.json",
@@ -117,7 +119,7 @@ def export(
 
         connection.close()
 
-        print("Export completed [bold green]successfully[/bold green].")
+        print("Export [bold green]completed[/bold green].")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

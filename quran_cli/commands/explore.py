@@ -36,6 +36,7 @@ def explore(
             "Type [bold red]exit[/bold red] or [bold red]quit[/bold red] to exit.\n"
         )
 
+        statement = ""
         while True:
             query = typer.prompt("sqlite", prompt_suffix=" >>> ")
 
@@ -43,8 +44,12 @@ def explore(
                 connection.close()
                 break
 
+            statement += f" {query}"
+            if not query.endswith(";"):
+                continue
+
             try:
-                results = cursor.execute(query).fetchall()
+                results = cursor.execute(statement).fetchall()
 
                 if len(results) >= 1:
                     table = Table(
@@ -68,9 +73,12 @@ def explore(
                     print("Query executed [bold green]successfully[/bold green].")
 
             except Exception as error:
+                statement = ""
                 print(f"[bold red]Error[/bold red]: {error}")
 
                 continue
+
+            statement = ""
 
         connection.close()
 

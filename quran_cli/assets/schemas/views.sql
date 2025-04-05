@@ -1,20 +1,14 @@
-DROP VIEW IF EXISTS "al_quran";
+DROP VIEW IF EXISTS "unaccent_verses";
 
-CREATE VIEW "al_quran" AS 
+-- This table is for searching verses without diacritics.
+CREATE VIEW "unaccent_verses" AS
 SELECT 
-  "verses"."id", 
-  "number", 
-  "content", 
-  "chapter_id" AS "chapter", 
-  "name", 
-  "order", 
-  CASE WHEN "type" = 1 THEN "Meccan" ELSE "Medinan" END AS "type", 
-  "verse_count", 
-  "page_count", 
-  "part_id" AS "part", 
-  "group_id" AS "group", 
-  "quarter_id" AS "quarter", 
-  "page_id" AS "page" 
-FROM 
-  "verses" 
-  JOIN "chapters" ON "verses"."chapter_id" = "chapters"."id";
+  "id",
+  "number",
+  "chapter_id",
+  "part_id",
+  "group_id",
+  "quarter_id",
+  "page_id",
+  REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE("content", 'ۜ', ''), 'ۥ', ''), 'ۦ', ''), 'ۚ', ''), 'ٍ', ''), 'ٌ', ''), 'ً', ''), 'ۢ', ''), '۟', ''), 'ۗ', ''), 'ۖ', ''), 'ۭ', ''), 'ۛ', ''), 'ٱ', 'ا'), 'ٰ', ''), 'ٓ', ''), 'ّ', ''), 'ْ', ''), 'ِ', ''), 'ُ', ''), 'َ', '') as "content"
+FROM "verses";

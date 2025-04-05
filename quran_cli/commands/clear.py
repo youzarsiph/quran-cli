@@ -35,10 +35,13 @@ def clear(
 
     try:
         connection = sqlite3.connect(database)
+
+        print(f"Clearing [bold]{database}[/bold]...", end=" ")
+
         connection.cursor().execute('DROP TABLE IF EXISTS "quran";')
         connection.close()
 
-        print("Database cleared [bold green]successfully[/bold green].")
+        print("[bold green]Done[/bold green]")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")
