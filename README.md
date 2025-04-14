@@ -44,11 +44,11 @@ quran-cli [OPTIONS] COMMAND [ARGS]...
 
 ### Available Commands
 
-- `clear`: Drops unused tables after normalization.
-- `explore`: Enables SQL-based querying of the Qur'an database.
-- `export`: Exports Qur'an data in various formats, such as CSV, JSON, and XML.
 - `init`: Initializes a new Qur'an database.
 - `normalize`: Normalizes the structure and content of an existing database.
+- `export`: Exports Qur'an data in various formats, such as CSV, JSON, and XML.
+- `clear`: Drops unused tables after normalization.
+- `explore`: Enables SQL-based querying of the Qur'an database.
 
 ---
 
@@ -71,6 +71,9 @@ quran-cli init [OPTIONS] DATABASE
 ```bash
 # Create a new database
 quran-cli init db.sqlite3
+
+# Init new db and generate SQL statements
+quran-cli init -g db.sqlite3
 ```
 
 ---
@@ -94,6 +97,12 @@ quran-cli normalize [OPTIONS] DATABASE
 ```bash
 # Normalize an existing database
 quran-cli normalize db.sqlite3
+
+# Normalize an existing database and adds arabic diacritics to chapter names
+quran-cli normalize -g db.sqlite3
+
+# Normalize an existing database with SQL statement generation
+quran-cli normalize -g db.sqlite3
 ```
 
 #### `clear`
@@ -120,32 +129,6 @@ quran-cli init db.sqlite3
 quran-cli normalize db.sqlite3
 
 quran-cli clear db.sqlite3
-```
-
----
-
-#### `explore`
-
-Interact with the Qur'an database using SQL queries.
-
-**Command Syntax:**
-
-```console
-quran-cli explore [OPTIONS] DATABASE
-```
-
-**Arguments:**
-
-- `DATABASE`: Specifies the database file to query. `required`
-
-**Examples:**
-
-```bash
-# Initialize a new database
-quran-cli init db.sqlite3
-
-# Explore the database using SQL queries
-quran-cli explore db.sqlite3
 ```
 
 ---
@@ -179,6 +162,32 @@ quran-cli normalize db.sqlite3
 
 # Export the normalized data to JSON format
 quran-cli export db.sqlite3 -f json
+```
+
+---
+
+#### `explore`
+
+Interact with the Qur'an database using SQL queries.
+
+**Command Syntax:**
+
+```console
+quran-cli explore [OPTIONS] DATABASE
+```
+
+**Arguments:**
+
+- `DATABASE`: Specifies the database file to query. `required`
+
+**Examples:**
+
+```bash
+# Initialize a new database
+quran-cli init db.sqlite3
+
+# Explore the database using SQL queries
+quran-cli explore db.sqlite3
 ```
 
 ---
