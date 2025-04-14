@@ -11,6 +11,14 @@ from quran_cli import utils
 
 def init(
     database: Annotated[Path, typer.Argument(dir_okay=False, help="Database name")],
+    generate_sql: Annotated[
+        bool,
+        typer.Option(
+            "-g",
+            "--generate-sql",
+            help="Weather to generate SQL statements for this command",
+        ),
+    ] = False,
 ) -> None:
     """
     Initialize Quran database.
@@ -30,9 +38,10 @@ def init(
 
         print(f"Initializing [bold]{name}[/bold]...")
 
-        utils.create_initial_schema(connection)
-        utils.insert_initial_data(connection)
+        utils.apply_initial_schema(connection, generate_sql)
+        utils.insert_initial_data(connection, generate_sql)
 
+        connection.commit()
         connection.close()
 
         print("Initialization [bold green]completed[/bold green].")

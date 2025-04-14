@@ -22,6 +22,14 @@ def normalize(
             help="Weather to include Arabic diacritics in chapter names",
         ),
     ] = False,
+    generate_sql: Annotated[
+        bool,
+        typer.Option(
+            "-g",
+            "--generate-sql",
+            help="Weather to generate SQL statements for this command",
+        ),
+    ] = False,
 ) -> None:
     """
     Normalize initial Quran database.
@@ -41,16 +49,17 @@ def normalize(
 
         print(f"Normalizing [bold]{database}[/bold]...")
 
-        utils.create_normalized_schema(connection)
-        utils.insert_chapters(connection, diacritics)
-        utils.insert_verses(connection)
-        utils.insert_table_data(connection)
-        utils.set_verse_fks(connection)
-        utils.set_verse_count(connection)
-        utils.set_foreign_keys(connection)
-        utils.set_page_count(connection)
-        utils.create_views(connection)
+        utils.apply_normalized_schema(connection, generate_sql)
+        utils.insert_chapters(connection, diacritics, generate_sql)
+        utils.insert_verses(connection, generate_sql)
+        utils.insert_table_data(connection, generate_sql)
+        utils.set_verse_fks(connection, generate_sql)
+        utils.set_verse_count(connection, generate_sql)
+        utils.set_foreign_keys(connection, generate_sql)
+        utils.set_page_count(connection, generate_sql)
+        utils.create_views(connection, generate_sql)
 
+        connection.commit()
         connection.close()
 
         print("Normalization [bold green]completed[/bold green].")

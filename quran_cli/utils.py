@@ -1,7 +1,9 @@
 """Utility functions"""
 
 import json
+import os
 from pathlib import Path
+import shutil
 import sqlite3
 from typing import List, Literal, Tuple
 from rich import print
@@ -35,7 +37,6 @@ def execute_sql_script(database: sqlite3.Connection, script: str) -> None:
     """
 
     database.cursor().executescript(script)
-    database.commit()
 
 
 def execute_sql_file(database: sqlite3.Connection, path: Path) -> None:
@@ -51,72 +52,94 @@ def execute_sql_file(database: sqlite3.Connection, path: Path) -> None:
         execute_sql_script(database, file.read())
 
 
-def create_initial_schema(database: sqlite3.Connection) -> None:
+def apply_initial_schema(
+    database: sqlite3.Connection, generate_sql: bool = False
+) -> None:
     """
     Creates the initial schema to insert Quran text.
 
     Args:
-        name (str): Database filename
+        database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
+    path = Path(__file__).parent / "assets" / "schemas" / "initial.sql"
+
+    if generate_sql:
+        os.makedirs("sql/workflow", exist_ok=True)
+        shutil.copyfile(path, "sql/workflow/01-initial-schema.sql")
+
     print("Creating [bold]the initial schema[/bold]...", end=" ")
-    execute_sql_file(
-        database,
-        Path(__file__).parent / "assets" / "schemas" / "initial.sql",
-    )
+    execute_sql_file(database, path)
     print("[bold green]Done[/bold green]")
 
 
-def create_views(database: sqlite3.Connection) -> None:
+def create_views(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Creates views to help with data access.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
+    path = Path(__file__).parent / "assets" / "schemas" / "views.sql"
+
+    if generate_sql:
+        shutil.copyfile(path, "sql/workflow/11-views.sql")
+
     print("Creating [bold]the views[/bold]...", end=" ")
-    execute_sql_file(
-        database,
-        Path(__file__).parent / "assets" / "schemas" / "views.sql",
-    )
+    execute_sql_file(database, path)
     print("[bold green]Done[/bold green]")
 
 
-def insert_initial_data(database: sqlite3.Connection) -> None:
+def insert_initial_data(
+    database: sqlite3.Connection, generate_sql: bool = False
+) -> None:
     """
     Inserts the Quran text into the database
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
+    path = Path(__file__).parent / "assets" / "data" / "initial.sql"
+
+    if generate_sql:
+        shutil.copyfile(path, "sql/workflow/02-initial-data.sql")
+
     print("Inserting [bold]initial data[/bold]...", end=" ")
-    execute_sql_file(
-        database,
-        Path(__file__).parent / "assets" / "data" / "verses.sql",
-    )
+    execute_sql_file(database, path)
     print("[bold green]Done[/bold green]")
 
 
-def create_normalized_schema(database: sqlite3.Connection) -> None:
+def apply_normalized_schema(
+    database: sqlite3.Connection, generate_sql: bool = False
+) -> None:
     """
     Creates the normalized schema to normalize the initial database.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
+    path = Path(__file__).parent / "assets" / "schemas" / "normalized.sql"
+
+    if generate_sql:
+        os.makedirs("sql/workflow", exist_ok=True)
+        shutil.copyfile(path, "sql/workflow/03-normalized-schema.sql")
+
     print("Creating [bold]the normalized schema[/bold]...", end=" ")
-    execute_sql_file(
-        database,
-        Path(__file__).parent / "assets" / "schemas" / "normalized.sql",
-    )
+    execute_sql_file(database, path)
     print("[bold green]Done[/bold green]")
 
 
 def insert_chapters(
-    database: sqlite3.Connection, with_diacritics: bool = False
+    database: sqlite3.Connection,
+    with_diacritics: bool = False,
+    generate_sql: bool = False,
 ) -> None:
     """
     Insert chapters (Al-Suwar) data into the database.
@@ -124,24 +147,35 @@ def insert_chapters(
     Args:
         database (sqlite3.Connection): Database connection
         with_diacritics (bool): Weather to include arabic diacritics in chapter names
+        generate_sql (bool): Weather to generate SQL statements
     """
 
+    path = Path(__file__).parent / "assets" / "data" / "chapters.sql"
+
+    if generate_sql:
+        shutil.copyfile(path, "sql/workflow/04-chapters.sql")
+
     print("Inserting [bold]chapters[/bold]...", end=" ")
-    execute_sql_file(
-        database,
-        Path(__file__).parent / "assets" / "data" / "chapters.sql",
-    )
+    execute_sql_file(database, path)
 
     if with_diacritics:
-        with open(
-            Path(__file__).parent / "assets" / "data" / "chapters.json",
-            encoding="utf-8",
-        ) as f:
-            for c in json.load(f):
-                database.cursor().execute(
-                    'UPDATE "chapters" SET "name" = ? WHERE "id" = ?',
-                    (c["new_name"], c["id"]),
-                )
+        src = Path(__file__).parent / "assets" / "data" / "chapters.json"
+
+        with open(src, encoding="utf-8") as f:
+            statements = "".join(
+                [
+                    f'UPDATE "chapters" SET "name" = "{chapter['new_name']}" WHERE "id" = {chapter['id']};\n'
+                    for chapter in json.load(f)
+                ]
+            )
+
+            if generate_sql:
+                with open(
+                    "sql/workflow/04-chapters.sql", "a", encoding="utf-8"
+                ) as output:
+                    output.write("\n\n" + statements)
+
+            execute_sql_script(database, statements)
 
     print("[bold green]Done[/bold green]")
 
@@ -229,64 +263,75 @@ def get_table_verse_range(
         return res
 
 
-def insert_verses(database: sqlite3.Connection) -> None:
+def insert_verses(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Insert verses (Al-Aayat) data into the database.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
+    statement = 'INSERT INTO "verses" ("number", "content", "chapter_id") SELECT "number", "content", "chapter_id" FROM "quran";'
+
+    if generate_sql:
+        with open("sql/workflow/05-verses.sql", "w", encoding="utf-8") as output:
+            output.write(statement)
+
     print("Inserting [bold]verses[/bold]...", end=" ")
-    execute_sql_script(
-        database,
-        'INSERT INTO "verses" ("number", "content", "chapter_id") '
-        'SELECT "number", "content", "chapter_id" FROM "quran";',
-    )
+    execute_sql_script(database, statement)
     print("[bold green]Done[/bold green]")
 
 
-def insert_table_data(database: sqlite3.Connection) -> None:
+def insert_table_data(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Insert data into parts, groups, quarters and pages tables.
 
     Args:
         database (sqlite3.Connection): Database connection
-
-    Returns:
-        bool: True if the data is inserted successfully else False.
+        generate_sql (bool): Weather to generate SQL statements
     """
+
+    statements = "".join(
+        [
+            *[
+                f'INSERT INTO "parts" (name) VALUES ("Part {p}");\n'
+                for p in range(1, 31)
+            ],
+            *[
+                f'INSERT INTO "groups" (name) VALUES ("Group {g}");\n'
+                for g in range(1, 61)
+            ],
+            *[
+                f'INSERT INTO "quarters" (name) VALUES ("Quarter {q}");\n'
+                for q in range(1, 241)
+            ],
+            *[
+                f'INSERT INTO "pages" (name) VALUES ("Page {p}");\n'
+                for p in range(1, 605)
+            ],
+        ]
+    )
+
+    if generate_sql:
+        with open("sql/workflow/06-tables.sql", "w", encoding="utf-8") as output:
+            output.write(statements)
 
     print(
         "Inserting data into [bold]parts, groups, quarters and pages tables[/bold]...",
         end=" ",
     )
-
-    cursor = database.cursor()
-
-    for i in range(1, 31):
-        cursor.execute("INSERT INTO parts (name) VALUES (?)", (f"Part {i}",))
-
-    for i in range(1, 61):
-        cursor.execute("INSERT INTO groups (name) VALUES (?)", (f"Group {i}",))
-
-    for i in range(1, 241):
-        cursor.execute("INSERT INTO quarters (name) VALUES (?)", (f"Quarter {i}",))
-
-    for i in range(1, 605):
-        cursor.execute("INSERT INTO pages (name) VALUES (?)", (f"Page {i}",))
-
-    database.commit()
-
+    execute_sql_script(database, statements)
     print("[bold green]Done[/bold green]")
 
 
-def set_verse_fks(database: sqlite3.Connection) -> None:
+def set_verse_fks(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Update the verses table to set part_id, group_id, quarter_id and page_id.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
     print(
@@ -295,100 +340,138 @@ def set_verse_fks(database: sqlite3.Connection) -> None:
         end=" ",
     )
 
-    cursor = database.cursor()
-
-    tables = ["parts", "pages", "quarters"]
-    for table in tables:
-        data = get_table_verse_range(database, table)
-
-        for i, item in enumerate(data, start=1):
-            cursor.execute(
-                f'UPDATE "verses" SET "{table[:-1]}_id" = ? where "id" between ? AND ?',
-                (i, *item),
-            )
-
-        database.commit()
-
-    # Insert group data
-    data = get_table_verse_range(database, "quarters")
-    ahzab = [
-        (data[i][0], data[i + 3][1] if i + 4 < len(data) - 1 else 6236)
-        for i in range(0, 240, 4)
+    statements = [
+        "".join(
+            [
+                # Generate SQL statement for each range
+                f'UPDATE "verses" SET "{t[:-1]}_id" = {id} WHERE "id" BETWEEN {item[0]} AND {item[1]};\n'
+                for id, item in enumerate(get_table_verse_range(database, t), start=1)
+            ]
+        )
+        # Generate verse ranges for each table
+        for t in ["parts", "quarters", "pages"]
     ]
 
-    for i, item in enumerate(ahzab, start=1):
-        cursor.execute(
-            'UPDATE "verses" SET group_id = ? where "id" between ? AND ?',
-            (i, *item),
-        )
+    # Compute group ranges based on quarter ranges; Group = 4 Quarter
+    q_ranges = get_table_verse_range(database, "quarters")
+    statements.insert(
+        1,
+        "".join(
+            [
+                f'UPDATE "verses" SET group_id = {i} WHERE "id" BETWEEN {g[0]} AND {g[1]};\n'
+                for i, g in enumerate(
+                    # Compute group ranges
+                    [
+                        (
+                            q_ranges[i][0],
+                            q_ranges[i + 3][1] if i + 4 < len(q_ranges) - 1 else 6236,
+                        )
+                        for i in range(0, 240, 4)
+                    ],
+                    start=1,
+                )
+            ]
+        ),
+    )
 
-    database.commit()
+    statements = "".join(statements)
+
+    if generate_sql:
+        with open("sql/workflow/07-verse_fks.sql", "w", encoding="utf-8") as output:
+            output.write(statements)
+
+    execute_sql_script(database, statements)
+
     print("[bold green]Done[/bold green]")
 
 
-def set_verse_count(database: sqlite3.Connection) -> None:
+def set_verse_count(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Update corresponding tables to set verse_count.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
     print("Setting [bold]verse_count[/bold]...", end=" ")
 
-    cursor = database.cursor()
-
-    tables = ["groups", "parts", "quarters", "pages"]
-    for table in tables:
-        data = cursor.execute(
-            f'SELECT COUNT(*) FROM "verses" GROUP BY "{table[:-1]}_id"'
-        ).fetchall()
-
-        for i, item in enumerate(data, start=1):
-            cursor.execute(
-                f'UPDATE {table} SET "verse_count" = ? WHERE "id" = ?', (item[0], i)
+    statements = "".join(
+        [
+            "".join(
+                [
+                    # Generate corresponding SQL statement
+                    f'UPDATE {t} SET "verse_count" = {item[0]} WHERE "id" = {id};\n'
+                    # Compute verse_count for each item in each table with item id
+                    for id, item in enumerate(
+                        database.cursor()
+                        .execute(
+                            f'SELECT COUNT(*) FROM "verses" GROUP BY "{t[:-1]}_id"'
+                        )
+                        .fetchall(),
+                        start=1,
+                    )
+                ]
             )
+            for t in ["parts", "groups", "quarters", "pages"]
+        ]
+    )
 
-    database.commit()
+    if generate_sql:
+        with open("sql/workflow/08-verse_count.sql", "w", encoding="utf-8") as output:
+            output.write(statements)
+
+    execute_sql_script(database, statements)
 
     print("[bold green]Done[/bold green]")
 
 
-def set_page_count(database: sqlite3.Connection) -> None:
+def set_page_count(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Update corresponding tables to set page_count.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
     print("Setting [bold]page_count[/bold]...", end=" ")
 
-    cursor = database.cursor()
-
-    tables = ["chapters", "parts", "groups", "quarters"]
-    for table in tables:
-        data = cursor.execute(
-            f'SELECT COUNT(DISTINCT "pages"."id") FROM "pages" INNER JOIN "verses" ON '
-            f'("pages"."id" = "verses"."page_id") GROUP BY "verses"."{table[:-1]}_id"'
-        ).fetchall()
-
-        for i, item in enumerate(data, start=1):
-            cursor.execute(
-                f'UPDATE {table} SET "page_count" = ? WHERE "id" = ?', (item[0], i)
+    statements = "".join(
+        [
+            "".join(
+                [
+                    f'UPDATE {t} SET "page_count" = {item[0]} WHERE "id" = {id};\n'
+                    for id, item in enumerate(
+                        database.cursor()
+                        .execute(
+                            'SELECT COUNT(DISTINCT "pages"."id") FROM "pages" INNER JOIN "verses" ON '
+                            f'("pages"."id" = "verses"."page_id") GROUP BY "verses"."{t[:-1]}_id"'
+                        )
+                        .fetchall(),
+                        start=1,
+                    )
+                ]
             )
+            for t in ["chapters", "parts", "groups", "quarters"]
+        ]
+    )
 
-    database.commit()
+    if generate_sql:
+        with open("sql/workflow/10-page_count.sql", "w", encoding="utf-8") as output:
+            output.write(str(statements))
 
+    execute_sql_script(database, statements)
     print("[bold green]Done[/bold green]")
 
 
-def set_foreign_keys(database: sqlite3.Connection) -> None:
+def set_foreign_keys(database: sqlite3.Connection, generate_sql: bool = False) -> None:
     """
     Update groups, quarters and pages tables to set foreign keys.
 
     Args:
         database (sqlite3.Connection): Database connection
+        generate_sql (bool): Weather to generate SQL statements
     """
 
     print(
@@ -396,48 +479,42 @@ def set_foreign_keys(database: sqlite3.Connection) -> None:
         end=" ",
     )
 
-    cursor = database.cursor()
-
     tables = [
         {
             "name": "groups",
             "select": 'SELECT "part_id" FROM "verses" GROUP BY "group_id"',
-            "update": 'UPDATE "groups" SET "part_id" = ? WHERE "id" = ?',
+            "update": 'UPDATE "groups" SET "part_id" = %s WHERE "id" = %s;\n',
         },
         {
             "name": "quarters",
             "select": 'SELECT "part_id", "group_id" FROM "verses" GROUP BY "quarter_id"',
-            "update": 'UPDATE "quarters" SET "part_id" = ?, "group_id" = ? WHERE "id" = ?',
+            "update": 'UPDATE "quarters" SET "part_id" = %s, "group_id" = %s WHERE "id" = %s;\n',
         },
         {
             "name": "pages",
             "select": 'SELECT "chapter_id", "part_id", "group_id", "quarter_id" FROM "verses" GROUP BY "page_id"',
-            "update": 'UPDATE "pages" SET "chapter_id" = ?, "part_id" = ?, "group_id" = ?, "quarter_id" = ? WHERE "id" = ?',
+            "update": 'UPDATE "pages" SET "chapter_id" = %s, "part_id" = %s, "group_id" = %s, "quarter_id" = %s WHERE "id" = %s;\n',
         },
     ]
 
-    for table in tables:
-        data = cursor.execute(table["select"]).fetchall()
-
-        for item in enumerate(data, start=1):
-            cursor.execute(table["update"], (*item[1], item[0]))
-
-    database.commit()
-
-    print("[bold green]Done[/bold green]")
-
-
-def insert_interpretations(database: sqlite3.Connection) -> None:
-    """
-    Insert interpolations (Tafsir) data into the database.
-
-    Args:
-        database (sqlite3.Connection): Database connection
-    """
-
-    print("Inserting [bold]interpolations[/bold]...", end=" ")
-    execute_sql_file(
-        database,
-        Path(__file__).parent / "assets" / "data" / "test.sql",
+    statements = "".join(
+        [
+            "".join(
+                [
+                    t["update"] % (*item, id)
+                    for id, item in enumerate(
+                        database.cursor().execute(t["select"]).fetchall(), start=1
+                    )
+                ]
+            )
+            for t in tables
+        ]
     )
+
+    if generate_sql:
+        with open("sql/workflow/09-tables_fks.sql", "w", encoding="utf-8") as output:
+            output.write(statements)
+
+    execute_sql_script(database, statements)
+
     print("[bold green]Done[/bold green]")
