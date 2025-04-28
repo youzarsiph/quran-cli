@@ -46,18 +46,19 @@ def normalize(
 
     try:
         connection = sqlite3.connect(database)
+        cursor = connection.cursor()
 
         print(f"Normalizing [bold]{database}[/bold]...")
 
-        utils.apply_normalized_schema(connection, generate_sql)
-        utils.insert_chapters(connection, diacritics, generate_sql)
-        utils.insert_verses(connection, generate_sql)
-        utils.insert_table_data(connection, generate_sql)
-        utils.set_verse_fks(connection, generate_sql)
-        utils.set_verse_count(connection, generate_sql)
-        utils.set_foreign_keys(connection, generate_sql)
-        utils.set_page_count(connection, generate_sql)
-        utils.create_views(connection, generate_sql)
+        utils.apply_normalized_schema(cursor, generate_sql)
+        utils.insert_chapters(cursor, diacritics, generate_sql)
+        utils.insert_verses(cursor, generate_sql)
+        utils.insert_table_data(cursor, generate_sql)
+        utils.set_verse_fks(cursor, generate_sql)
+        utils.set_verse_count(cursor, generate_sql)
+        utils.set_foreign_keys(cursor, generate_sql)
+        utils.set_page_count(cursor, generate_sql)
+        utils.create_views(cursor, generate_sql)
 
         connection.commit()
         connection.close()

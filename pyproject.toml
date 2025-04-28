@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "quran-cli"
-version = "0.1.9"
+version = "0.2.0"
 description = "Quran CLI, A tool to generate the most sophisticated Quran data."
 authors = ["Yousuf Abu Shanab <josephyousef249@gmail.com>"]
 license = "MIT"

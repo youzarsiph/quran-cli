@@ -1,4 +1,4 @@
-"""Init command"""
+"""Interpret command"""
 
 from pathlib import Path
 import sqlite3
@@ -9,8 +9,11 @@ from rich import print
 from quran_cli import utils
 
 
-def init(
-    database: Annotated[Path, typer.Argument(dir_okay=False, help="Database name")],
+def interpret(
+    database: Annotated[
+        Path,
+        typer.Argument(exists=True, dir_okay=False, help="Database file"),
+    ],
     generate_sql: Annotated[
         bool,
         typer.Option(
@@ -21,31 +24,30 @@ def init(
     ] = False,
 ) -> None:
     """
-    Initialize Quran database.
+    Add Quran interpretations (Al Muyassar) to the database.
 
     Examples:
 
     ```bash
-    # Create initial database
     quran-cli init db.sqlite3
+    quran-cli normalize -d db.sqlite3
+    quran-cli interpret db.sqlite3
     ```
     """
 
-    name = utils.get_database_name(database)
-
     try:
-        connection = sqlite3.connect(name)
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
 
-        print(f"Initializing [bold]{name}[/bold]...")
+        print(f"Adding interpretations to [bold]{database}[/bold]...")
 
-        utils.apply_initial_schema(cursor, generate_sql)
-        utils.insert_initial_data(cursor, generate_sql)
+        utils.insert_interpretations(cursor, generate_sql)
+        utils.insert_trans(cursor, generate_sql)
 
         connection.commit()
         connection.close()
 
-        print("Initialization [bold green]completed[/bold green].")
+        print("Interpretation [bold green]completed[/bold green].")
 
     except Exception as error:
         print(f"[bold red]Error[/bold red]: {error}")

@@ -93,6 +93,21 @@ def export(
                 6: "part_id",
                 7: "quarter_id",
             },
+            "languages": {0: "id", 1: "name", 2: "code"},
+            "collections": {
+                0: "id",
+                1: "type",
+                2: "name",
+                3: "description",
+                4: "language_id",
+            },
+            "items": {
+                0: "id",
+                1: "content",
+                2: "chapter_id",
+                3: "collection_id",
+                4: "verse_id",
+            },
         }
 
         for name, fields in table_fields_map.items():
