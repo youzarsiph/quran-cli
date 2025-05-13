@@ -286,19 +286,19 @@ def insert_table_data(database: sqlite3.Cursor, generate_sql: bool = False) -> N
     statements = "".join(
         [
             *[
-                f'INSERT INTO "parts" (name) VALUES ("Part {p}");\n'
+                f'INSERT INTO "parts" (name) VALUES ("الجزء {p}");\n'
                 for p in range(1, 31)
             ],
             *[
-                f'INSERT INTO "groups" (name) VALUES ("Group {g}");\n'
+                f'INSERT INTO "groups" (name) VALUES ("الحزب {g}");\n'
                 for g in range(1, 61)
             ],
             *[
-                f'INSERT INTO "quarters" (name) VALUES ("Quarter {q}");\n'
+                f'INSERT INTO "quarters" (name) VALUES ("الربع {q}");\n'
                 for q in range(1, 241)
             ],
             *[
-                f'INSERT INTO "pages" (name) VALUES ("Page {p}");\n'
+                f'INSERT INTO "pages" (name) VALUES ("الصفحة {p}");\n'
                 for p in range(1, 605)
             ],
         ]
